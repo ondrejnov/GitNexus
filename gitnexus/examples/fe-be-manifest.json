@@ -1,0 +1,179 @@
+{
+  "$schema": "gitnexus/manifest/v1",
+  "description": "FE→BE RPC dependency graph (example — do not edit)",
+  "generated_by": "scripts/fe-be-graph/generate_manifest.py",
+  "symbols": [
+    {
+      "id": "Function:backend/app/api/apitoken/edit.py:fetch",
+      "kind": "Function",
+      "name": "fetch",
+      "filePath": "backend/app/api/apitoken/edit.py",
+      "language": "python",
+      "description": "RPC handler for apitoken.fetch"
+    },
+    {
+      "id": "Function:backend/app/api/apitoken/edit.py:save",
+      "kind": "Function",
+      "name": "save",
+      "filePath": "backend/app/api/apitoken/edit.py",
+      "language": "python",
+      "description": "RPC handler for apitoken.save"
+    },
+    {
+      "id": "Function:backend/app/api/apitoken/edit.py:delete",
+      "kind": "Function",
+      "name": "delete",
+      "filePath": "backend/app/api/apitoken/edit.py",
+      "language": "python",
+      "description": "RPC handler for apitoken.delete"
+    },
+    {
+      "id": "Function:backend/app/api/apitoken/list.py:get_list",
+      "kind": "Function",
+      "name": "get_list",
+      "filePath": "backend/app/api/apitoken/list.py",
+      "language": "python",
+      "description": "RPC handler for apitoken.get_list"
+    },
+    {
+      "id": "File:frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "kind": "File",
+      "name": "ApiTokenForm.tsx",
+      "filePath": "frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "language": "typescript"
+    },
+    {
+      "id": "File:frontend/app/components/profile/apitoken/list.tsx",
+      "kind": "File",
+      "name": "list.tsx",
+      "filePath": "frontend/app/components/profile/apitoken/list.tsx",
+      "language": "typescript"
+    },
+    {
+      "id": "proc_rpc_apitoken_fetch",
+      "kind": "Process",
+      "name": "RPC apitoken.fetch",
+      "description": "JSON-RPC endpoint apitoken.fetch: frontend/app/components/profile/apitoken/ApiTokenForm.tsx → backend/app/api/apitoken/edit.py:fetch"
+    },
+    {
+      "id": "proc_rpc_apitoken_save",
+      "kind": "Process",
+      "name": "RPC apitoken.save",
+      "description": "JSON-RPC endpoint apitoken.save: frontend/app/components/profile/apitoken/ApiTokenForm.tsx → backend/app/api/apitoken/edit.py:save"
+    },
+    {
+      "id": "proc_rpc_apitoken_delete",
+      "kind": "Process",
+      "name": "RPC apitoken.delete",
+      "description": "JSON-RPC endpoint apitoken.delete: frontend/app/components/profile/apitoken/list.tsx → backend/app/api/apitoken/edit.py:delete"
+    },
+    {
+      "id": "proc_rpc_apitoken_get_list",
+      "kind": "Process",
+      "name": "RPC apitoken.get_list",
+      "description": "JSON-RPC endpoint apitoken.get_list: frontend/app/components/profile/apitoken/list.tsx → backend/app/api/apitoken/list.py:get_list"
+    }
+  ],
+  "relations": [
+    {
+      "from": "File:frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "to": "Function:backend/app/api/apitoken/edit.py:fetch",
+      "type": "CALLS",
+      "confidence": 0.9,
+      "reason": "rpc-call",
+      "transport": "json-rpc",
+      "rpc": "apitoken.fetch"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "to": "proc_rpc_apitoken_fetch",
+      "type": "STEP_IN_PROCESS",
+      "step": 1,
+      "confidence": 1.0,
+      "reason": "rpc-caller"
+    },
+    {
+      "from": "Function:backend/app/api/apitoken/edit.py:fetch",
+      "to": "proc_rpc_apitoken_fetch",
+      "type": "STEP_IN_PROCESS",
+      "step": 2,
+      "confidence": 1.0,
+      "reason": "rpc-handler"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "to": "Function:backend/app/api/apitoken/edit.py:save",
+      "type": "CALLS",
+      "confidence": 0.9,
+      "reason": "rpc-call",
+      "transport": "json-rpc",
+      "rpc": "apitoken.save"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/ApiTokenForm.tsx",
+      "to": "proc_rpc_apitoken_save",
+      "type": "STEP_IN_PROCESS",
+      "step": 1,
+      "confidence": 1.0,
+      "reason": "rpc-caller"
+    },
+    {
+      "from": "Function:backend/app/api/apitoken/edit.py:save",
+      "to": "proc_rpc_apitoken_save",
+      "type": "STEP_IN_PROCESS",
+      "step": 2,
+      "confidence": 1.0,
+      "reason": "rpc-handler"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/list.tsx",
+      "to": "Function:backend/app/api/apitoken/edit.py:delete",
+      "type": "CALLS",
+      "confidence": 0.9,
+      "reason": "rpc-call",
+      "transport": "json-rpc",
+      "rpc": "apitoken.delete"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/list.tsx",
+      "to": "proc_rpc_apitoken_delete",
+      "type": "STEP_IN_PROCESS",
+      "step": 1,
+      "confidence": 1.0,
+      "reason": "rpc-caller"
+    },
+    {
+      "from": "Function:backend/app/api/apitoken/edit.py:delete",
+      "to": "proc_rpc_apitoken_delete",
+      "type": "STEP_IN_PROCESS",
+      "step": 2,
+      "confidence": 1.0,
+      "reason": "rpc-handler"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/list.tsx",
+      "to": "Function:backend/app/api/apitoken/list.py:get_list",
+      "type": "CALLS",
+      "confidence": 0.9,
+      "reason": "rpc-call",
+      "transport": "json-rpc",
+      "rpc": "apitoken.get_list"
+    },
+    {
+      "from": "File:frontend/app/components/profile/apitoken/list.tsx",
+      "to": "proc_rpc_apitoken_get_list",
+      "type": "STEP_IN_PROCESS",
+      "step": 1,
+      "confidence": 1.0,
+      "reason": "rpc-caller"
+    },
+    {
+      "from": "Function:backend/app/api/apitoken/list.py:get_list",
+      "to": "proc_rpc_apitoken_get_list",
+      "type": "STEP_IN_PROCESS",
+      "step": 2,
+      "confidence": 1.0,
+      "reason": "rpc-handler"
+    }
+  ]
+}

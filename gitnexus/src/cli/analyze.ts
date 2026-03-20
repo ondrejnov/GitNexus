@@ -47,6 +47,7 @@ export interface AnalyzeOptions {
   force?: boolean;
   embeddings?: boolean;
   skills?: boolean;
+  manifest?: string;
   verbose?: boolean;
 }
 
@@ -207,6 +208,8 @@ export const analyzeCommand = async (
     const phaseLabel = PHASE_LABELS[progress.phase] || progress.phase;
     const scaled = Math.round(progress.percent * 0.6);
     updateBar(scaled, phaseLabel);
+  }, {
+    manifestPath: options?.manifest,
   });
 
   // ── Phase 2: LadybugDB (60–85%) ──────────────────────────────────────
@@ -369,6 +372,14 @@ export const analyzeCommand = async (
   console.log(`  ${stats.nodes.toLocaleString()} nodes | ${stats.edges.toLocaleString()} edges | ${pipelineResult.communityResult?.stats.totalCommunities || 0} clusters | ${pipelineResult.processResult?.stats.totalProcesses || 0} flows`);
   console.log(`  LadybugDB ${lbugTime}s | FTS ${ftsTime}s | Embeddings ${embeddingSkipped ? embeddingSkipReason : embeddingTime + 's'}`);
   console.log(`  ${repoPath}`);
+
+  if (pipelineResult.externalManifestSummary) {
+    const summary = pipelineResult.externalManifestSummary;
+    console.log(`  Manifest: ${summary.symbolsImported} symbols imported, ${summary.symbolsReused} reused, ${summary.relationshipsImported} relationships, ${summary.processesImported} processes`);
+    if (summary.warnings.length > 0) {
+      console.log(`  Manifest warnings: ${summary.warnings.length} (first: ${summary.warnings[0]})`);
+    }
+  }
 
   if (aiContext.files.length > 0) {
     console.log(`  Context: ${aiContext.files.join(', ')}`);

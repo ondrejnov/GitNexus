@@ -166,6 +166,42 @@ describe('pipeline end-to-end', () => {
   });
 });
 
+describe('pipeline with external manifest', () => {
+  it('merges external FE/BE manifest before communities and processes', async () => {
+    const tmpDir = path.join(os.tmpdir(), `gn-pipeline-manifest-${Date.now()}`);
+    await fs.mkdir(tmpDir, { recursive: true });
+
+    try {
+      await fs.writeFile(path.join(tmpDir, 'manifest.json'), JSON.stringify({
+        symbols: [
+          { id: 'fe.query', kind: 'Function', name: 'useUsersQuery', filePath: 'frontend/src/useUsersQuery.ts', language: 'typescript', isExported: true },
+          { id: 'fe.api', kind: 'Function', name: 'fetchUsers', filePath: 'frontend/src/usersClient.ts', language: 'typescript', isExported: true },
+          { id: 'be.handler', kind: 'Function', name: 'list_users', filePath: 'backend/users/routes.py', language: 'python', isExported: true },
+          { id: 'proc.users', kind: 'Process', name: 'GET /api/users', processType: 'cross_community', stepCount: 3, entryPointId: 'fe.query', terminalId: 'be.handler' },
+        ],
+        relations: [
+          { from: 'fe.query', to: 'fe.api', type: 'CALLS', confidence: 1 },
+          { from: 'fe.api', to: 'be.handler', type: 'CALLS', confidence: 0.9, reason: 'http GET /api/users' },
+          { from: 'fe.query', to: 'proc.users', type: 'STEP_IN_PROCESS', step: 1 },
+          { from: 'fe.api', to: 'proc.users', type: 'STEP_IN_PROCESS', step: 2 },
+          { from: 'be.handler', to: 'proc.users', type: 'STEP_IN_PROCESS', step: 3 },
+        ],
+      }, null, 2), 'utf8');
+
+      const result = await runPipelineFromRepo(tmpDir, () => {}, { manifestPath: 'manifest.json', skipGraphPhases: true });
+
+      expect(result.externalManifestSummary).toBeDefined();
+      expect(result.externalManifestSummary?.symbolsImported).toBe(4);
+      expect(result.externalManifestSummary?.relationshipsImported).toBe(5);
+      expect(result.graph.getNode('Function:frontend/src/useUsersQuery.ts:useUsersQuery')).toBeDefined();
+      expect(result.graph.getNode('Function:backend/users/routes.py:list_users')).toBeDefined();
+      expect(result.graph.getNode('proc_users')).toBeDefined();
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
+
 // ─── Pipeline error handling ──────────────────────────────────────────
 
 describe('pipeline error handling', () => {

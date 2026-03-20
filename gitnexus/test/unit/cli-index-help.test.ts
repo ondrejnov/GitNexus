@@ -42,4 +42,11 @@ describe('CLI help surface', () => {
     expect(result.stdout).toContain('--include-tests');
     expect(result.stdout).toContain('--repo <name>');
   });
+
+  it('analyze help exposes external manifest import option', () => {
+    const result = runHelp('analyze');
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('--manifest <path>');
+  });
 });

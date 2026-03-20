@@ -13,6 +13,7 @@ import { processCommunities } from './community-processor.js';
 import { processProcesses } from './process-processor.js';
 import { createResolutionContext } from './resolution-context.js';
 import { createASTCache } from './ast-cache.js';
+import { mergeExternalManifestIntoGraph, type ExternalManifestSummary } from './external-manifest.js';
 import { PipelineProgress, PipelineResult } from '../../types/pipeline.js';
 import { walkRepositoryPaths, readFileContents } from './filesystem-walker.js';
 import { getLanguageFromFilename } from './utils.js';
@@ -36,6 +37,8 @@ const AST_CACHE_CAP = 50;
 export interface PipelineOptions {
   /** Skip MRO, community detection, and process extraction for faster test runs. */
   skipGraphPhases?: boolean;
+  /** Merge an external FE/BE manifest into the graph before graph phases. */
+  manifestPath?: string;
 }
 
 export const runPipelineFromRepo = async (
@@ -341,6 +344,18 @@ export const runPipelineFromRepo = async (
 
     let communityResult: Awaited<ReturnType<typeof processCommunities>> | undefined;
     let processResult: Awaited<ReturnType<typeof processProcesses>> | undefined;
+    let externalManifestSummary: ExternalManifestSummary | undefined;
+
+    if (options?.manifestPath) {
+      onProgress({
+        phase: 'parsing',
+        percent: 82,
+        message: 'Merging external manifest...',
+        stats: { filesProcessed: totalFiles, totalFiles, nodesCreated: graph.nodeCount },
+      });
+
+      externalManifestSummary = await mergeExternalManifestIntoGraph(graph, repoPath, options.manifestPath);
+    }
 
     if (!options?.skipGraphPhases) {
       // ── Phase 4.5: Method Resolution Order ──────────────────────────────
@@ -479,7 +494,7 @@ export const runPipelineFromRepo = async (
 
     astCache.clear();
 
-    return { graph, repoPath, totalFileCount: totalFiles, communityResult, processResult };
+    return { graph, repoPath, totalFileCount: totalFiles, communityResult, processResult, externalManifestSummary };
   } catch (error) {
     cleanup();
     throw error;

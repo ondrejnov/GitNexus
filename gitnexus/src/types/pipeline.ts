@@ -25,6 +25,14 @@ export interface PipelineResult {
   totalFileCount: number;
   communityResult?: CommunityDetectionResult;
   processResult?: ProcessDetectionResult;
+  externalManifestSummary?: {
+    manifestPath: string;
+    symbolsImported: number;
+    symbolsReused: number;
+    relationshipsImported: number;
+    processesImported: number;
+    warnings: string[];
+  };
 }
 
 // Serializable version for Web Worker communication
@@ -59,4 +67,3 @@ export const deserializePipelineResult = (
     totalFileCount: serialized.totalFileCount,
   };
 };
-
