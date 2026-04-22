@@ -1,6 +1,6 @@
 ---
 name: gitnexus-cli
-description: "Use when the user needs to run GitNexus CLI commands like analyze/index a repo, check status, clean the index, generate a wiki, or list indexed repos. Examples: \"Index this repo\", \"Reanalyze the codebase\", \"Generate a wiki\""
+description: "Use when the user needs to run GitNexus CLI commands like analyze/index a repo, refresh AGENTS.md and bundled GitNexus skills, check status, clean the index, generate a wiki, or list indexed repos. Examples: \"Index this repo\", \"Refresh agent files\", \"Generate a wiki\""
 ---
 
 # GitNexus CLI Commands
@@ -15,7 +15,7 @@ All commands work via `npx` — no global install required.
 npx gitnexus analyze
 ```
 
-Run from the project root. This parses all source files, builds the knowledge graph, writes it to `.gitnexus/`, and generates CLAUDE.md / AGENTS.md context files.
+Run from the project root. This parses all source files, builds the knowledge graph, and writes it to `.gitnexus/`.
 
 | Flag           | Effect                                                           |
 | -------------- | ---------------------------------------------------------------- |
@@ -23,6 +23,14 @@ Run from the project root. This parses all source files, builds the knowledge gr
 | `--embeddings` | Enable embedding generation for semantic search (off by default) |
 
 **When to run:** First time in a project, after major code changes, or when `gitnexus://repo/{name}/context` reports the index is stale. In Claude Code, a PostToolUse hook runs `analyze` automatically after `git commit` and `git merge`, preserving embeddings if previously generated.
+
+### agents — Install base skills and refresh AGENTS.md
+
+```bash
+npx gitnexus agents
+```
+
+Run this after the repo is already indexed. It installs the bundled GitNexus skill set under `.claude/skills/gitnexus/` and updates `AGENTS.md` without touching `CLAUDE.md`.
 
 ### status — Check index freshness
 

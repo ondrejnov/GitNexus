@@ -37,8 +37,7 @@ import {
   cleanupOldKuzuFiles,
 } from "../storage/repo-manager.js";
 import { getCurrentCommit, isGitRepo, getGitRoot } from "../storage/git.js";
-import { generateAIContextFiles } from "./ai-context.js";
-import { generateSkillFiles, type GeneratedSkillInfo } from "./skill-gen.js";
+import { generateSkillFiles } from "./skill-gen.js";
 import fs from "fs/promises";
 
 const HEAP_MB = 8192;
@@ -411,31 +410,10 @@ export const analyzeCommand = async (
     ).length;
   }
 
-  let generatedSkills: GeneratedSkillInfo[] = [];
   if (options?.skills && pipelineResult.communityResult) {
     updateBar(99, "Generating skill files...");
-    const skillResult = await generateSkillFiles(
-      repoPath,
-      projectName,
-      pipelineResult,
-    );
-    generatedSkills = skillResult.skills;
+    await generateSkillFiles(repoPath, projectName, pipelineResult);
   }
-
-  const aiContext = await generateAIContextFiles(
-    repoPath,
-    storagePath,
-    projectName,
-    {
-      files: pipelineResult.totalFileCount,
-      nodes: stats.nodes,
-      edges: stats.edges,
-      communities: pipelineResult.communityResult?.stats.totalCommunities,
-      clusters: aggregatedClusterCount,
-      processes: pipelineResult.processResult?.stats.totalProcesses,
-    },
-    generatedSkills,
-  );
 
   await closeLbug();
   // Note: we intentionally do NOT call disposeEmbedder() here.
@@ -477,10 +455,6 @@ export const analyzeCommand = async (
         `  Manifest warnings: ${summary.warnings.length} (first: ${summary.warnings[0]})`,
       );
     }
-  }
-
-  if (aiContext.files.length > 0) {
-    console.log(`  Context: ${aiContext.files.join(", ")}`);
   }
 
   // Show a quiet summary if some edge types needed fallback insertion
