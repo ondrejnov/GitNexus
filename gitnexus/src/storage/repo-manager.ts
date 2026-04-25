@@ -11,6 +11,7 @@ import path from 'path';
 import os from 'os';
 
 export interface RepoMeta {
+  name?: string;
   repoPath: string;
   lastCommit: string;
   indexedAt: string;
@@ -246,17 +247,17 @@ const writeRegistry = async (entries: RegistryEntry[]): Promise<void> => {
  */
 export const registerRepo = async (repoPath: string, meta: RepoMeta): Promise<void> => {
   const resolved = path.resolve(repoPath);
-  const name = path.basename(resolved);
+  const configuredName = meta.name?.trim();
+  const name = configuredName || path.basename(resolved);
   const { storagePath } = getStoragePaths(resolved);
 
   const entries = await readRegistry();
-  const existing = entries.findIndex((e) => {
-    const a = path.resolve(e.path);
-    const b = resolved;
+  const isSamePath = (entryPath: string): boolean => {
+    const existingPath = path.resolve(entryPath);
     return process.platform === 'win32'
-      ? a.toLowerCase() === b.toLowerCase()
-      : a === b;
-  });
+      ? existingPath.toLowerCase() === resolved.toLowerCase()
+      : existingPath === resolved;
+  };
 
   const entry: RegistryEntry = {
     name,
@@ -267,13 +268,24 @@ export const registerRepo = async (repoPath: string, meta: RepoMeta): Promise<vo
     stats: meta.stats,
   };
 
-  if (existing >= 0) {
-    entries[existing] = entry;
-  } else {
-    entries.push(entry);
+  const nextEntries: RegistryEntry[] = [];
+  let replaced = false;
+  for (const existingEntry of entries) {
+    const sameConfiguredName = Boolean(configuredName)
+      && existingEntry.name.toLowerCase() === name.toLowerCase();
+    if (isSamePath(existingEntry.path) || sameConfiguredName) {
+      if (!replaced) {
+        nextEntries.push(entry);
+        replaced = true;
+      }
+      continue;
+    }
+    nextEntries.push(existingEntry);
   }
 
-  await writeRegistry(entries);
+  if (!replaced) nextEntries.push(entry);
+
+  await writeRegistry(nextEntries);
 };
 
 /**

@@ -12,6 +12,7 @@ import {
   getStoragePath,
   getStoragePaths,
   readRegistry,
+  registerRepo,
   saveCLIConfig,
   loadCLIConfig,
 } from '../../src/storage/repo-manager.js';
@@ -60,6 +61,68 @@ describe('readRegistry', () => {
     const result = await readRegistry();
     // Result is an array (may or may not be empty depending on user's system)
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+// ─── registerRepo ──────────────────────────────────────────────────
+
+describe('registerRepo custom names', () => {
+  let tmpHandle: Awaited<ReturnType<typeof createTempDir>>;
+
+  beforeEach(async () => {
+    tmpHandle = await createTempDir('gitnexus-registry-test-');
+    vi.spyOn(os, 'homedir').mockReturnValue(tmpHandle.dbPath);
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    await tmpHandle.cleanup();
+  });
+
+  it('uses meta.name as the registry name', async () => {
+    const repoPath = path.join(tmpHandle.dbPath, 'feature-branch');
+
+    await registerRepo(repoPath, {
+      name: 'GitNexus',
+      repoPath,
+      indexedAt: '2026-04-25T00:00:00.000Z',
+      lastCommit: 'abc123',
+      stats: { nodes: 12 },
+    });
+
+    const entries = await readRegistry();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'GitNexus',
+      path: path.resolve(repoPath),
+      lastCommit: 'abc123',
+    });
+  });
+
+  it('replaces an older worktree entry with the same configured name', async () => {
+    const mainWorktree = path.join(tmpHandle.dbPath, 'GitNexus');
+    const branchWorktree = path.join(tmpHandle.dbPath, 'feature-branch');
+
+    await registerRepo(mainWorktree, {
+      name: 'GitNexus',
+      repoPath: mainWorktree,
+      indexedAt: '2026-04-24T00:00:00.000Z',
+      lastCommit: 'abc123',
+    });
+    await registerRepo(branchWorktree, {
+      name: 'GitNexus',
+      repoPath: branchWorktree,
+      indexedAt: '2026-04-25T00:00:00.000Z',
+      lastCommit: 'def456',
+    });
+
+    const entries = await readRegistry();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'GitNexus',
+      path: path.resolve(branchWorktree),
+      lastCommit: 'def456',
+    });
   });
 });
 

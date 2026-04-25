@@ -35,6 +35,7 @@ import {
   registerRepo,
   getGlobalRegistryPath,
   cleanupOldKuzuFiles,
+  type RepoMeta,
 } from "../storage/repo-manager.js";
 import { getCurrentCommit, isGitRepo, getGitRoot } from "../storage/git.js";
 import { generateSkillFiles } from "./skill-gen.js";
@@ -63,6 +64,7 @@ function ensureHeap(): boolean {
 }
 
 export interface AnalyzeOptions {
+  name?: string;
   force?: boolean;
   embeddings?: boolean;
   skills?: boolean;
@@ -72,6 +74,11 @@ export interface AnalyzeOptions {
 
 /** Threshold: auto-skip embeddings for repos with more nodes than this */
 const EMBEDDING_NODE_LIMIT = 50_000;
+
+const normalizeProjectName = (name?: string): string | undefined => {
+  const trimmed = name?.trim();
+  return trimmed ? trimmed : undefined;
+};
 
 const PHASE_LABELS: Record<string, string> = {
   extracting: "Scanning files",
@@ -132,6 +139,12 @@ export const analyzeCommand = async (
 
   const currentCommit = getCurrentCommit(repoPath);
   const existingMeta = await loadMeta(storagePath);
+  const configuredProjectName = normalizeProjectName(
+    options?.name ?? process.env.GITNEXUS_REPO_NAME,
+  );
+  const storedProjectName = normalizeProjectName(existingMeta?.name);
+  const projectName = configuredProjectName || storedProjectName || path.basename(repoPath);
+  const shouldPersistProjectName = Boolean(configuredProjectName || storedProjectName);
 
   if (
     existingMeta &&
@@ -139,6 +152,25 @@ export const analyzeCommand = async (
     !options?.skills &&
     existingMeta.lastCommit === currentCommit
   ) {
+    const currentMeta: RepoMeta = {
+      ...existingMeta,
+      repoPath,
+    };
+    if (shouldPersistProjectName) {
+      currentMeta.name = projectName;
+    }
+
+    if (
+      currentMeta.repoPath !== existingMeta.repoPath ||
+      currentMeta.name !== existingMeta.name
+    ) {
+      await saveMeta(storagePath, currentMeta);
+    }
+    await registerRepo(repoPath, currentMeta);
+
+    if (configuredProjectName && existingMeta.name !== configuredProjectName) {
+      console.log(`  Repository name set to "${configuredProjectName}"`);
+    }
     console.log("  Already up to date\n");
     return;
   }
@@ -380,7 +412,7 @@ export const analyzeCommand = async (
     }
   }
 
-  const meta = {
+  const meta: RepoMeta = {
     repoPath,
     lastCommit: currentCommit,
     indexedAt: new Date().toISOString(),
@@ -393,11 +425,13 @@ export const analyzeCommand = async (
       embeddings: embeddingCount,
     },
   };
+  if (shouldPersistProjectName) {
+    meta.name = projectName;
+  }
   await saveMeta(storagePath, meta);
   await registerRepo(repoPath, meta);
   await addToGitignore(repoPath);
 
-  const projectName = path.basename(repoPath);
   let aggregatedClusterCount = 0;
   if (pipelineResult.communityResult?.communities) {
     const groups = new Map<string, number>();

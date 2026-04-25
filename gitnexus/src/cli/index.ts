@@ -26,6 +26,10 @@ program
 program
   .command("analyze [path]")
   .description("Index a repository (full analysis)")
+  .option(
+    "--name <name>",
+    "Stable repository name for MCP resources and generated agent context",
+  )
   .option("-f, --force", "Force full re-index even if up to date")
   .option(
     "--embeddings",
@@ -42,7 +46,7 @@ program
   .option("-v, --verbose", "Enable verbose ingestion warnings (default: false)")
   .addHelpText(
     "after",
-    "\nEnvironment variables:\n  GITNEXUS_NO_GITIGNORE=1  Skip .gitignore parsing (still reads .gitnexusignore)",
+    "\nEnvironment variables:\n  GITNEXUS_REPO_NAME=<name>  Stable repository name for MCP resources and agent context\n  GITNEXUS_NO_GITIGNORE=1   Skip .gitignore parsing (still reads .gitnexusignore)",
   )
   .action(createLazyAction(() => import("./analyze.js"), "analyzeCommand"));
 

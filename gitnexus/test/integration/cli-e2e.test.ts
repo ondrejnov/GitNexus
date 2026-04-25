@@ -21,6 +21,7 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(testDir, "../..");
 const cliEntry = path.join(repoRoot, "src/cli/index.ts");
 const MINI_REPO = path.resolve(testDir, "..", "fixtures", "mini-repo");
+const STABLE_REPO_NAME = "stable-mini";
 
 // Absolute file:// URL to tsx loader — needed when spawning CLI with cwd
 // outside the project tree (bare 'tsx' specifier won't resolve there).
@@ -143,6 +144,25 @@ describe("CLI end-to-end", () => {
     expect(fs.statSync(gitnexusDir).isDirectory()).toBe(true);
   });
 
+  it("analyze command stores a configured repository name", () => {
+    const result = runCliRaw(["analyze", "--name", STABLE_REPO_NAME], MINI_REPO, 30000);
+
+    if (result.status === null) return;
+
+    expect(
+      result.status,
+      [
+        `analyze --name exited with code ${result.status}`,
+        `stdout: ${result.stdout}`,
+        `stderr: ${result.stderr}`,
+      ].join("\n"),
+    ).toBe(0);
+
+    const metaPath = path.join(MINI_REPO, ".gitnexus", "meta.json");
+    const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+    expect(meta.name).toBe(STABLE_REPO_NAME);
+  });
+
   it("agents command generates AGENTS.md without creating CLAUDE.md", () => {
     const gitnexusDir = path.join(MINI_REPO, ".gitnexus");
     if (!fs.existsSync(gitnexusDir)) {
@@ -174,10 +194,13 @@ describe("CLI end-to-end", () => {
 
     const agentsPath = path.join(MINI_REPO, "AGENTS.md");
     expect(fs.existsSync(agentsPath)).toBe(true);
-    expect(fs.readFileSync(agentsPath, "utf8")).toContain("gitnexus:start");
-    expect(fs.readFileSync(agentsPath, "utf8")).not.toContain(
-      ".claude/skills/generated/",
-    );
+    const agentsContent = fs.readFileSync(agentsPath, "utf8");
+    expect(agentsContent).toContain("gitnexus:start");
+    expect(agentsContent).not.toContain(".claude/skills/generated/");
+
+    const metaPath = path.join(gitnexusDir, "meta.json");
+    const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+    if (meta.name) expect(agentsContent).toContain(`**${meta.name}**`);
 
     const claudePath = path.join(MINI_REPO, "CLAUDE.md");
     expect(fs.existsSync(claudePath)).toBe(false);
@@ -331,7 +354,7 @@ describe("CLI end-to-end", () => {
   describe("tool output goes to stdout via fd 1 (#324)", () => {
     it("cypher: JSON appears on stdout, not stderr", () => {
       const result = runCliRaw(
-        ["cypher", "MATCH (n) RETURN n.name LIMIT 3", "--repo", "mini-repo"],
+        ["cypher", "MATCH (n) RETURN n.name LIMIT 3", "--repo", STABLE_REPO_NAME],
         MINI_REPO,
       );
       if (result.status === null) return; // CI timeout tolerance
@@ -351,7 +374,7 @@ describe("CLI end-to-end", () => {
     it("query: JSON appears on stdout, not stderr", () => {
       // "handler" is a generic term likely to match something in mini-repo
       const result = runCliRaw(
-        ["query", "handler", "--repo", "mini-repo"],
+        ["query", "handler", "--repo", STABLE_REPO_NAME],
         MINI_REPO,
       );
       if (result.status === null) return;
@@ -368,7 +391,7 @@ describe("CLI end-to-end", () => {
           "--direction",
           "upstream",
           "--repo",
-          "mini-repo",
+          STABLE_REPO_NAME,
         ],
         MINI_REPO,
       );
@@ -386,7 +409,7 @@ describe("CLI end-to-end", () => {
           "cypher",
           "MATCH (n:Function) RETURN n.name LIMIT 5",
           "--repo",
-          "mini-repo",
+          STABLE_REPO_NAME,
         ],
         MINI_REPO,
       );
@@ -414,7 +437,7 @@ describe("CLI end-to-end", () => {
             "cypher",
             "MATCH (n) RETURN n LIMIT 500",
             "--repo",
-            "mini-repo",
+            STABLE_REPO_NAME,
           ],
           {
             cwd: MINI_REPO,

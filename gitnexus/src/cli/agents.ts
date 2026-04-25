@@ -49,7 +49,7 @@ export const agentsCommand = async (inputPath?: string) => {
     );
   }
 
-  const projectName = path.basename(repoPath);
+  const projectName = meta.name?.trim() || path.basename(repoPath);
 
   console.log("\n  Updating AGENTS.md...");
   const agentsResult = await generateAIContextFiles(

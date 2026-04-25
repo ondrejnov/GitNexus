@@ -19,10 +19,13 @@ Run from the project root. This parses all source files, builds the knowledge gr
 
 | Flag           | Effect                                                           |
 | -------------- | ---------------------------------------------------------------- |
+| `--name <name>` | Use a stable repository name for MCP resources and AGENTS.md     |
 | `--force`      | Force full re-index even if up to date                           |
 | `--embeddings` | Enable embedding generation for semantic search (off by default) |
 
 **When to run:** First time in a project, after major code changes, or when `gitnexus://repo/{name}/context` reports the index is stale. In Claude Code, a PostToolUse hook runs `analyze` automatically after `git commit` and `git merge`, preserving embeddings if previously generated.
+
+For git worktrees, prefer a stable name such as `npx gitnexus analyze --name GitNexus` so MCP resource URLs and generated agent instructions stay consistent across branches.
 
 ### agents — Install base skills and refresh AGENTS.md
 

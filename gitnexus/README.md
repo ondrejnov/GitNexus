@@ -139,6 +139,7 @@ Your AI agent gets these tools automatically:
 ```bash
 gitnexus setup                    # Configure MCP for your editors (one-time)
 gitnexus analyze [path]           # Index a repository (or update stale index)
+gitnexus analyze --name <name>    # Use a stable MCP repo name (useful for git worktrees)
 gitnexus analyze --force          # Force full re-index
 gitnexus analyze --embeddings     # Enable embedding generation (slower, better search)
 gitnexus analyze --verbose        # Log skipped files when parsers are unavailable
@@ -155,6 +156,13 @@ gitnexus wiki --model <model>    # Wiki with custom LLM model (default: gpt-4o-m
 ## Multi-Repo Support
 
 GitNexus supports indexing multiple repositories. Each `gitnexus analyze` registers the repo in a global registry (`~/.gitnexus/registry.json`). The MCP server serves all indexed repos automatically.
+
+For git worktrees or branch-specific checkout directories, pass a stable name so MCP resource URLs and generated agent instructions do not change between branches:
+
+```bash
+gitnexus analyze --name GitNexus
+gitnexus agents
+```
 
 ## Supported Languages
 
